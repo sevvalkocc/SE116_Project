@@ -43,6 +43,15 @@ public class Job {
         this.startTime = startTime;
     }
 
+    public int getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(int deadline) {
+        this.deadline = deadline;
+    }
+
+
     public int getDuration() {
         return duration;
     }
@@ -51,11 +60,4 @@ public class Job {
         this.duration = duration;
     }
 
-    public int getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(int deadline) {
-        this.deadline = deadline;
-    }
 }
