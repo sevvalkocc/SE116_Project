@@ -1,4 +1,5 @@
 import java.io.File;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,6 +19,25 @@ public class Main {
             }
             checkFile(workflowFileName);
             checkFile(jobFileName);
+
+            File workflowFile=new File(workflowFileName);
+            WorkflowFileParser workParser=new WorkflowFileParser();
+
+            try{
+                workParser.parse(workflowFile);
+            }catch(Exception e){
+                System.out.println("An error occurred: "+e.getMessage());
+            }
+
+            File jobFile=new File(jobFileName);
+            JobFileParser jobParser=new JobFileParser();
+            try{
+                jobParser.parse(jobFile);
+            }catch(Exception e){
+                System.out.println("An error occurred: "+e.getMessage());
+            }
+
+
     }
         private static boolean checkFile(String fileName){
             File file=new File(fileName);
@@ -32,4 +52,6 @@ public class Main {
             System.out.println("File " + fileName + " exists and is accessible.");
             return true;
         }
+
+
 }
