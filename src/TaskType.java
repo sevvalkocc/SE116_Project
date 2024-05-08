@@ -1,18 +1,18 @@
 public class TaskType extends Task{
-    private int defaultSize;
+    private String defaultSize;
 
 
 
-    public TaskType(String taskId, String taskType, int executionTime, int defaultSize) {
+    public TaskType(String taskId, String taskType, int executionTime, String defaultSize) {
         super(taskId, taskType, executionTime);
         this.defaultSize = defaultSize;
     }
 
-    public int getDefaultSize() {
+    public String getDefaultSize() {
         return defaultSize;
     }
 
-    public void setDefaultSize(int defaultSize) {
+    public void setDefaultSize(String defaultSize) {
         this.defaultSize = defaultSize;
     }
 }
