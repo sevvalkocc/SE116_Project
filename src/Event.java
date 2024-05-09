@@ -1,13 +1,13 @@
 public class Event {
     private String eventId;
     private int eventTime;
-    private EventType eventType;
+    //private EventType eventType;
 
 
-    public Event(String eventId, int eventTime, EventType eventType) {
+    public Event(String eventId, int eventTime /*EventType eventType*/) {
         this.eventId = eventId;
         this.eventTime = eventTime;
-        this.eventType = eventType;
+        //this.eventType = eventType;
     }
 
     public String getEventId() {
@@ -26,11 +26,11 @@ public class Event {
         this.eventTime = eventTime;
     }
 
-    public EventType getEventType() {
+    /*public EventType getEventType() {
         return eventType;
     }
 
     public void setEventType(EventType eventType) {
         this.eventType = eventType;
-    }
+    }*/
 }

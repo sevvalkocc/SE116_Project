@@ -4,7 +4,7 @@ import java.util.*;
 public class JobFileParser {
 
     private String fileName;
-    private static ArrayList<Job> jobList;
+    private static ArrayList<Job2> jobList;
     private ArrayList<String> errorMessages;
 
     public JobFileParser(String fileName) {
@@ -35,8 +35,6 @@ public class JobFileParser {
         } catch (IOException e) {
             System.out.println("An error occurred while reading the file: " + e.getMessage());
         }
-        // File file = new File(fileName);
-
     }
 
     private void parseLine(String line, int lineNumber) {
@@ -53,7 +51,7 @@ public class JobFileParser {
             int startTime = Integer.parseInt(parts[2]);
             int duration = Integer.parseInt(parts[3]);
 
-            Job job = new Job(jobId, jobTypeId, startTime, duration);
+            Job2 job = new Job2 (jobId, jobTypeId, startTime, duration);
 
             jobList.add(job);
 
@@ -64,7 +62,7 @@ public class JobFileParser {
         }
     }
 
-    public static ArrayList<Job> getJobs() {
+    public static ArrayList<Job2> getJobs() {
         return jobList;
     }
 }
