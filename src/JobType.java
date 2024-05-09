@@ -1,38 +1,51 @@
 import java.util.ArrayList;
 
 public class JobType {
-    private String jobTypeId;
-    private ArrayList<TaskType> taskTypes;;
-    private double size;
+    private String jobID;
+    private String jobtypeID;
+    private int startTime;
+    private int duration;
+    private ArrayList<TaskType> taskTypes;
 
-    public String getJobTypeId() {
-        return jobTypeId;
+
+    public JobType(String jobID, String jobtypeID, int startTime, int duration) {
+        this.jobID = jobID;
+        this.jobtypeID = jobtypeID;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
-    public void setJobTypeId(String jobTypeId) {
-        this.jobTypeId = jobTypeId;
+    public String getJobID() {
+        return jobID;
     }
 
-    public JobType(String jobTypeId, ArrayList<TaskType> taskTypes, double size) {
-        this.jobTypeId = jobTypeId;
-        this.taskTypes = taskTypes;
-        this.size = size;
+    public void setJobID(String jobID) {
+        this.jobID = jobID;
     }
 
-    public double getSize() {
-        return size;
+    public String getJobtypeID() {
+        return jobtypeID;
     }
 
-    public void setSize(double size) {
-        this.size = size;
+    public void setJobtypeID(String jobtypeID) {
+        this.jobtypeID = jobtypeID;
     }
 
-    public ArrayList<TaskType> getTaskTypes() {
-        return taskTypes;
+    public int getStartTime() {
+        return startTime;
     }
 
-    public void setTaskTypes(ArrayList<TaskType> taskTypes) {
-        this.taskTypes = taskTypes;
+    public void setStartTime(int startTime) {
+        this.startTime = startTime;
     }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
 
 }

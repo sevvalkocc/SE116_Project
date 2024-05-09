@@ -1,48 +1,68 @@
 public class Station {
-    private String stationId;
-    private double stationSpeed;
-    private int capacity;
-    private String singleTaskTypes;
-    private String multipleTaskTypes;
+    private String stationID;
+    private int maxCapacity;
+    private boolean multiFlag;
+    private boolean fifoFlag;
+    private double speed;
+    private double changedSpeed;
 
-    public Station(String stationId, double stationSpeed, int capacity, String singleTaskTypes,String multipleTaskTypes) {
-        this.stationId = stationId;
-        this.stationSpeed = stationSpeed;
-        this.capacity = capacity;
-        this.singleTaskTypes = singleTaskTypes;
-        this.multipleTaskTypes = multipleTaskTypes;
+    public Station(String stationID, int maxCapacity, boolean multiFlag, boolean fifoFlag, double speed, double changedSpeed) {
+        this.stationID = stationID;
+        this.maxCapacity = maxCapacity;
+        this.multiFlag = multiFlag;
+        this.fifoFlag = fifoFlag;
+        this.speed = speed;
+        this.changedSpeed = changedSpeed;
     }
 
-    public String getStationId() {
-        return stationId;
+    public String getStationID() {
+        return stationID;
     }
-    public void setStationId(String stationId) {
-        this.stationId = stationId;
+
+    public void setStationID(String stationID) {
+        this.stationID = stationID;
     }
-    public double getStationSpeed() {
-        return stationSpeed;
+
+    public int getMaxCapacity() {
+        return maxCapacity;
     }
-    public void setStationSpeed(double stationSpeed) {
-        this.stationSpeed = stationSpeed;
+
+    public void setMaxCapacity(int maxCapacity) {
+        this.maxCapacity = maxCapacity;
     }
-    public int getCapacity() {
-        return capacity;
+
+    public boolean isMultiFlag() {
+        return multiFlag;
     }
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
+
+    public void setMultiFlag(boolean multiFlag) {
+        this.multiFlag = multiFlag;
     }
-    public String isSingleTaskTypes() {
-        return singleTaskTypes;
+
+    public boolean isFifoFlag() {
+        return fifoFlag;
     }
-    public void setSingleTaskTypes(String singleTaskTypes) {
-        this.singleTaskTypes = singleTaskTypes;
+
+    public void setFifoFlag(boolean fifoFlag) {
+        this.fifoFlag = fifoFlag;
     }
-    public String isMultipleTaskTypes() {
-        return multipleTaskTypes;
+
+    public double getSpeed() {
+        return speed;
     }
-    public void setMultipleTaskTypes(String multipleTaskTypes) {
-        this.multipleTaskTypes = multipleTaskTypes;
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
+
+    public double getChangedSpeed() {
+        return changedSpeed;
+    }
+
+    public void setChangedSpeed(double changedSpeed) {
+        this.changedSpeed = changedSpeed;
+    }
+
 
 
 }
