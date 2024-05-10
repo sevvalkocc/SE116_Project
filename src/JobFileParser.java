@@ -4,7 +4,9 @@ import java.util.*;
 public class JobFileParser {
 
     private String fileName;
+
     private static ArrayList<JobType> jobTypeList;
+    private static ArrayList<JobType> jobList;
     private ArrayList<String> errorMessages;
 
     public JobFileParser(String fileName) {
@@ -51,7 +53,7 @@ public class JobFileParser {
             int startTime = Integer.parseInt(parts[2]);
             int duration = Integer.parseInt(parts[3]);
 
-            Job2 job = new Job2 (jobId, jobTypeId, startTime, duration);
+            JobType job = new JobType (jobId, jobTypeId, startTime, duration);
 
             jobList.add(job);
 
@@ -62,7 +64,7 @@ public class JobFileParser {
         }
     }
 
-    public static ArrayList<Job2> getJobs() {
+    public static ArrayList<JobType> getJobs() {
         return jobList;
     }
 }
