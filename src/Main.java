@@ -5,7 +5,9 @@ public class Main {
     public static void main(String[] args) {
         WorkflowFileParser workflowFileParser= new WorkflowFileParser("workflow.txt");
         JobFileParser jobFileParser = new JobFileParser("jobs.txt");
-        /*
+
+
+
         if (args.length != 2) {
             System.out.println("Please write in this format: java Main <workflow_file> <job_file>");
             return;
@@ -13,7 +15,7 @@ public class Main {
             String workflowFileName;
             String jobFileName;
 
-            if(args[0].endsWith(".job")){
+            if(args[0].startsWith("job.")){
                 jobFileName=args[0];
                 workflowFileName=args[1];
             }else{
@@ -30,7 +32,7 @@ public class Main {
                 workParser.parse(workflowFile);
             }catch(Exception e){
                 System.out.println("An error occurred: "+e.getMessage());
-            }*/
+            }
 
             /*File jobFile=new File(jobFileName);
             JobFileParser jobParser=new JobFileParser(jobFileName);

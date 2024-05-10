@@ -1,37 +1,28 @@
 public class TaskType{
-    private String tasktypesID;
-    private int defaultSize;
-    private int size;
+    private String taskTypeID;
+    private double defaultSize;
 
-    public TaskType(String tasktypesID, int defaultSize, int size) {
-        this.tasktypesID = tasktypesID;
+    public TaskType(String taskTypeID, double defaultSize) {
+        this.taskTypeID = taskTypeID;
         this.defaultSize = defaultSize;
-        this.size = size;
     }
 
-    public String getTasktypesID() {
-        return tasktypesID;
+    public String getTaskTypeID() {
+        return taskTypeID;
     }
 
-    public void setTasktypesID(String tasktypesID) {
-        this.tasktypesID = tasktypesID;
+    public void setTaskTypeID(String taskTypeID) {
+        this.taskTypeID = taskTypeID;
     }
 
-    public int getDefaultSize() {
+    public double getDefaultSize() {
         return defaultSize;
     }
 
-    public void setDefaultSize(int defaultSize) {
+    public void setDefaultSize(double defaultSize) {
         this.defaultSize = defaultSize;
     }
 
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
 
 }
 
