@@ -3,15 +3,15 @@ public class Station {
     private int maxCapacity;
     private boolean multiFlag;
     private boolean fifoFlag;
-    private double speed;
+    private String taskSizeInStation;
     private double changedSpeed;
 
-    public Station(String stationID, int maxCapacity, boolean multiFlag, boolean fifoFlag, double speed, double changedSpeed) {
+    public Station(String stationID, int maxCapacity, boolean multiFlag, boolean fifoFlag, String taskSizeInStation, double changedSpeed) {
         this.stationID = stationID;
         this.maxCapacity = maxCapacity;
         this.multiFlag = multiFlag;
         this.fifoFlag = fifoFlag;
-        this.speed = speed;
+        this.taskSizeInStation = taskSizeInStation;
         this.changedSpeed = changedSpeed;
     }
 
@@ -47,12 +47,12 @@ public class Station {
         this.fifoFlag = fifoFlag;
     }
 
-    public double getSpeed() {
-        return speed;
+    public String getTaskSizeInStation() {
+        return taskSizeInStation;
     }
 
-    public void setSpeed(double speed) {
-        this.speed = speed;
+    public void setTaskSizeInStation(String taskSizeInStation) {
+        this.taskSizeInStation = taskSizeInStation;
     }
 
     public double getChangedSpeed() {

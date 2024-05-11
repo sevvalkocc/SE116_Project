@@ -5,8 +5,9 @@ public class WorkflowFileParser {
     Scanner sc=new Scanner(System.in);
 
     Map<String, TaskType> taskTypes = new HashMap<>();
-    ArrayList<TaskType> taskTypeList;
-    ArrayList <String> errorMessages=new ArrayList<>();
+    static ArrayList<TaskType> taskTypeList;
+    static ArrayList<Station> stationList;
+    static ArrayList <String> errorMessages=new ArrayList<>();
 
 
     public void parse(File file){
@@ -124,6 +125,7 @@ public class WorkflowFileParser {
                     //throw new Exception("Task size for " + taskTypeID + " must be specified in job type at line " + lineNumber);
                 }
 
+
             }
             for (int i=0;i<forJobTypeID.size();i++){
                 for (int j=i+1;j<forJobTypeID.size();j++){
@@ -145,11 +147,19 @@ public class WorkflowFileParser {
             String[] parts = updatedLine.replaceAll("[()]","").split("\\s+");
             String stationID=parts[0];
             int maxCapacity=Integer.parseInt(parts[1]);
+            boolean isMultiFlag="Y".equals(parts[2]);
+            boolean isFifoFlag="Y".equals(parts[3]);
 
             Set<String> referencedTasks = new HashSet<>();
             ArrayList<String> forTaskSizeInStations=new ArrayList<>();
-            String taskSizeInStation;
+            String taskSizeInStation=null;
 
+            if (!stationID.matches("[A-Za-z][A-Za-z0-9_]*")){
+                errorMessages.add("Invalid stationID " + stationID + " at line "+ lineNumber);
+                //throw new Exception("Invalid stationID " + stationID + " at line "+ lineNumber);
+            }
+
+            double stationSpeed=0;
             for (int i=4;i<parts.length;i+=2){
                 if (parts[i].startsWith("[A-Za-z][A-Za-z0-9_]*")) {
                     String taskTypeID = parts[i];
@@ -157,14 +167,13 @@ public class WorkflowFileParser {
                     taskSizeInStation=parts[i+1];
                     forTaskSizeInStations.add(taskSizeInStation);
                 }else{
-                    double stationSpeed=Double.parseDouble(parts[i]);
+                    stationSpeed=Double.parseDouble(parts[i]);
                 }
+                Station station=new Station(stationID,maxCapacity,isMultiFlag,isFifoFlag,taskSizeInStation,stationSpeed);
+                stationList.add(station);
             }
 
             checkForWhichTaskUsed(referencedTasks);
-
-            //write situations that may cause errors
-            //CREATE OBJECTS
 
         }
     }
@@ -176,14 +185,13 @@ public class WorkflowFileParser {
              //throw new Exception(taskTypeID + " not executed in any stations");
          }
         }
-
-
     }
 
-    public void displayErrors(ArrayList<String> errorMessages){
+    public static void displayErrors(ArrayList<String> errorMessages){
         for(String error:errorMessages){
             System.out.println(error);
         }
     }
+
 
 }
