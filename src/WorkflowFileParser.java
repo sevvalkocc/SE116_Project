@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class WorkflowFileParser {
@@ -10,26 +11,26 @@ public class WorkflowFileParser {
     static ArrayList <String> errorMessages=new ArrayList<>();
 
 
-    public void parse(File file){
-        int lineNumber=0;
-        while (sc.hasNextLine()){
-            String line=sc.nextLine().trim();
-            lineNumber++;
-            if(line.isEmpty()) continue;
-            try(Scanner sc=new Scanner(file)){
-                if(line.startsWith("(TASK TYPES")){   //parse taskTypes
-                    parseTaskTypes(sc,lineNumber);
-
-                }else if(line.startsWith("(JOB TYPES")){   //parse jobTypes
-                    parseJobTypes(sc,lineNumber);
-
-                }else if(line.startsWith("(STATIONS")){   //parse stations
-                    parseStations(sc,lineNumber);
-
+    public void parse(File file) {
+        try (Scanner fileScanner = new Scanner(file)) {
+            int lineNumber = 0;
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine().trim();
+                lineNumber++;
+                if (line.isEmpty())
+                    continue;
+                if (line.startsWith("(TASK TYPES")) { // parse taskTypes
+                    parseTaskTypes(fileScanner, lineNumber);
+                } else if (line.startsWith("(JOB TYPES")) { // parse jobTypes
+                    parseJobTypes(fileScanner, lineNumber);
+                } else if (line.startsWith("(STATIONS")) { // parse stations
+                    parseStations(fileScanner, lineNumber);
                 }
-            }catch(Exception e){
-                System.out.println("Error at line "+ lineNumber + ":" +e.getMessage());
             }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + file.getName());
+        } catch (Exception e) {
+            System.out.println("Error while parsing file: " + e.getMessage());
         }
     }
     private void parseTaskTypes(Scanner sc,int lineNumber){
