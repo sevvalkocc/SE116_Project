@@ -3,23 +3,17 @@ import java.util.*;
 
 public class JobFileParser {
 
-    private String fileName;
-
-    private static ArrayList<JobType> jobTypeList;
     private static ArrayList<JobType> jobList;
     private ArrayList<String> errorMessages;
 
-    public JobFileParser(String fileName) {
-        this.fileName = fileName;
-        JobFileParser.jobTypeList = new ArrayList<>();
-        this.errorMessages = new ArrayList<>();
+    public JobFileParser() {
+        errorMessages = new ArrayList<>();
+        jobList = new ArrayList<>();
     }
 
-    public void parse() throws FileNotFoundException {
+    public void parse(File file) throws FileNotFoundException {
 
-        File file = new File(fileName);
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 
             Scanner scanner = new Scanner(file);
             int lineNumber = 0;
@@ -53,7 +47,7 @@ public class JobFileParser {
             int startTime = Integer.parseInt(parts[2]);
             int duration = Integer.parseInt(parts[3]);
 
-            JobType job = new JobType (jobId, jobTypeId, startTime, duration);
+            JobType job = new JobType(jobId, jobTypeId, startTime, duration);
 
             jobList.add(job);
 
@@ -66,5 +60,20 @@ public class JobFileParser {
 
     public static ArrayList<JobType> getJobs() {
         return jobList;
+    }
+
+    // For testing Job Array List
+    public void test() {
+        if (jobList != null) {
+            System.out.println("Job List:");
+            for (JobType job : jobList) {
+                System.out.println(job);
+            }
+        } else {
+            System.out.println("Job List is empty");
+        }
+        for (String errorMessage : errorMessages) {
+            System.out.println(errorMessage);
+        }
     }
 }

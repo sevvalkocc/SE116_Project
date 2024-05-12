@@ -47,5 +47,15 @@ public class JobType {
         this.duration = duration;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Job ID: ").append(jobID)
+                .append(", Job Type ID: ").append(jobtypeID)
+                .append(", Start Time: ").append(startTime)
+                .append(", Duration: ").append(duration);
+        return sb.toString();
+    }
+
 
 }
