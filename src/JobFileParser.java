@@ -1,79 +1,66 @@
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class JobFileParser {
+    private Map<String, JobType> jobTypes;
 
-    private static ArrayList<JobType> jobList;
-    private ArrayList<String> errorMessages;
-
-    public JobFileParser() {
-        errorMessages = new ArrayList<>();
-        jobList = new ArrayList<>();
+    public JobFileParser(Map<String, JobType> jobTypes) {
+        this.jobTypes = jobTypes;
     }
 
-    public void parse(File file) throws FileNotFoundException {
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-
-            Scanner scanner = new Scanner(file);
-            int lineNumber = 0;
-
-            while (scanner.hasNextLine()) {
-                lineNumber++;
-                String line = scanner.nextLine().trim();
-                try {
-                    parseLine(line, lineNumber);
-                } catch (Exception e) {
-                    errorMessages.add("Error at line " + lineNumber + ": " + e.getMessage());
-                }
+    public Map<String, Job> parse(File file) throws FileNotFoundException {
+        Map<String, Job> jobs = new HashMap<>();
+        Scanner scanner = new Scanner(file);
+        List<String> errorMessages = new ArrayList<>();
+        int lineNum = 1;
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine().trim();
+            if (line.isEmpty())
+                continue;
+            String[] parts = line.split("\\s+");
+            if (parts.length < 4) {
+                errorMessages.add("Invalid job entry format at line " + lineNum);
+                continue;
             }
-            scanner.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + e.getMessage());
-        }
-    }
-
-    private void parseLine(String line, int lineNumber) {
-
-        String[] parts = line.split("\\s+");
-
-        if (parts.length != 4) {
-            throw new IllegalArgumentException("Incorrect number of fields");
-        }
-
-        try {
             String jobId = parts[0];
             String jobTypeId = parts[1];
-            int startTime = Integer.parseInt(parts[2]);
-            int duration = Integer.parseInt(parts[3]);
-
-            JobType job = new JobType(jobId, jobTypeId, startTime, duration);
-
-            jobList.add(job);
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid number format");
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Unknown error occurred");
-        }
-    }
-
-    public static ArrayList<JobType> getJobs() {
-        return jobList;
-    }
-
-    // For testing Job Array List
-    public void test() {
-        if (jobList != null) {
-            System.out.println("Job List:");
-            for (JobType job : jobList) {
-                System.out.println(job);
+            int startTime = -1;
+            int duration = -1;
+            try {
+                startTime = Integer.parseInt(parts[2]);
+                duration = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                errorMessages.add("Invalid number format at line " + lineNum);
+                continue;
             }
-        } else {
-            System.out.println("Job List is empty");
+
+            JobType jobType = jobTypes.get(jobTypeId);
+            if (jobType == null) {
+                errorMessages.add("JobType " + jobTypeId + " at line " + lineNum + " is not defined.");
+                continue;
+            }
+
+            List<Double> taskSizes = new ArrayList<>();
+            for (int i = 4; i < parts.length; i++) {
+                try {
+                    taskSizes.add(Double.parseDouble(parts[i]));
+                } catch (NumberFormatException e) {
+                    taskSizes.add(-1.0); // Default to -1.0 to use job type's default size
+                }
+            }
+
+            Job job = new Job(jobId, jobType, startTime, duration);
+            jobs.put(jobId, job);
+            lineNum++;
         }
-        for (String errorMessage : errorMessages) {
-            System.out.println(errorMessage);
+        scanner.close();
+        if (!errorMessages.isEmpty()) {
+            for (String error : errorMessages) {
+                System.out.println(error);
+            }
+            System.exit(1); // Stop code if error
         }
+        return jobs;
     }
 }
