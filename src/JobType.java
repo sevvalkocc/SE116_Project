@@ -1,61 +1,37 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JobType {
-    private String jobID;
-    private String jobtypeID;
-    private int startTime;
-    private int duration;
-    private ArrayList<TaskType> taskTypes;
+    private String jobTypeID;
+    private List<TaskType> tasks;
+    private Map<String, Double> taskSizes;
 
-
-    public JobType(String jobID, String jobtypeID, int startTime, int duration) {
-        this.jobID = jobID;
-        this.jobtypeID = jobtypeID;
-        this.startTime = startTime;
-        this.duration = duration;
+    public JobType(String jobTypeID, List<TaskType> tasks, Map<String, Double> taskSizes) {
+        this.jobTypeID = jobTypeID;
+        this.tasks = new ArrayList<>(tasks);
+        this.taskSizes = new HashMap<>(taskSizes);
     }
 
-    public String getJobID() {
-        return jobID;
+    public JobType(String jobTypeID, List<TaskType> tasks) {
+        this.jobTypeID = jobTypeID;
+        this.tasks = new ArrayList<>(tasks);
     }
 
-    public void setJobID(String jobID) {
-        this.jobID = jobID;
+    public String getJobTypeID() {
+        return jobTypeID;
     }
 
-    public String getJobtypeID() {
-        return jobtypeID;
+    public List<TaskType> getTasks() {
+        return tasks;
     }
 
-    public void setJobtypeID(String jobtypeID) {
-        this.jobtypeID = jobtypeID;
+    public double getTaskSize(String taskTypeID) {
+        return taskSizes.getOrDefault(taskTypeID, 1.0);
     }
 
-    public int getStartTime() {
-        return startTime;
+    public void setTaskSize(String taskTypeID, double size) {
+        taskSizes.put(taskTypeID, size);
     }
-
-    public void setStartTime(int startTime) {
-        this.startTime = startTime;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Job ID: ").append(jobID)
-                .append(", Job Type ID: ").append(jobtypeID)
-                .append(", Start Time: ").append(startTime)
-                .append(", Duration: ").append(duration);
-        return sb.toString();
-    }
-
-
 }
