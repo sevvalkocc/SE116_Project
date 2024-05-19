@@ -1,198 +1,248 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.*;
 
 public class WorkflowFileParser {
-    Scanner sc=new Scanner(System.in);
 
-    Map<String, TaskType> taskTypes = new HashMap<>();
-    static ArrayList<TaskType> taskTypeList;
-    static ArrayList<Station> stationList;
-    static ArrayList <String> errorMessages=new ArrayList<>();
+    private Map<String, TaskType> taskTypes = new HashMap<>();
+    private Map<String, JobType> jobTypes = new HashMap<>();
+    private Map<String, Station> stations = new HashMap<>();
+    private List <String> errorMessages = new ArrayList<>();
 
 
-    public void parse(File file) {
-        try (Scanner fileScanner = new Scanner(file)) {
-            int lineNumber = 0;
-            while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine().trim();
+    public Map<String,Station> parse(File file)throws Exception {
+        Scanner sc = new Scanner(file);
+        int lineNumber = 1;
+        try {
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine().trim();
+                if (line.isEmpty()) {
+                    lineNumber++;
+                    continue;
+                }
+                if (line.startsWith("(TASK TYPES")) {
+                    parseTaskTypes(sc, lineNumber, line.substring("(TASKTYPES".length()).trim());
+
+                } else if (line.startsWith("(JOB TYPES")) {
+                    parseJobTypes(sc, lineNumber);
+
+                } else if (line.startsWith("(STATIONS")) {
+                    parseStations(sc, lineNumber);
+                    break;
+                }
                 lineNumber++;
-                if (line.isEmpty())
-                    continue;
-                if (line.startsWith("(TASK TYPES")) { // parse taskTypes
-                    parseTaskTypes(fileScanner, lineNumber);
-                } else if (line.startsWith("(JOB TYPES")) { // parse jobTypes
-                    parseJobTypes(fileScanner, lineNumber);
-                } else if (line.startsWith("(STATIONS")) { // parse stations
-                    parseStations(fileScanner, lineNumber);
-                }
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + file.getName());
-        } catch (Exception e) {
-            System.out.println("Error while parsing file: " + e.getMessage());
+        } finally {
+            sc.close();
+            reportErrors();
         }
+        return stations;
     }
-    private void parseTaskTypes(Scanner sc,int lineNumber){
-
-        while (sc.hasNextLine()) {
-            String line = sc.nextLine().trim();
-            String updatedLine=line.replaceAll("TASKTYPES\\s+","");
-            lineNumber++;
-            if (updatedLine.equals(")")) break;
-            String[] tokens = updatedLine.split("\\s+");
-
-            double defaultSize;
-            String taskTypeID;
-            ArrayList<String> listForTaskTypeID = new ArrayList<>();
-            ArrayList<Double> listForTaskDefaultSize = new ArrayList<>();
-
-            for (int i = 0; i < tokens.length; i += 2) {
-
-                if (tokens[i].matches("^[A-Za-z].*")) {
-                    taskTypeID = tokens[i];
-                    listForTaskTypeID.add(taskTypeID);
-                } else {
-                    i -= 3;
-                    continue;
-                }
-                if (i + 1 < tokens.length && tokens[i + 1].matches("-?\\d+(\\.\\d+)?")) {
-                    defaultSize = Double.parseDouble(tokens[i + 1]);
-                    listForTaskDefaultSize.add(defaultSize);
-                } else {
-                    defaultSize = 0;
-                    listForTaskDefaultSize.add(defaultSize);
-                }
-                if ( defaultSize < 0) {
-                    errorMessages.add("TaskType " + taskTypeID + " has a negative task size at line " + lineNumber);
-                    //throw new IllegalArgumentException("TaskType " + taskTypeID + " has a negative task size at line " + lineNumber);
-                }
-
-                for (int k=0;k<listForTaskTypeID.size();k++){
-                    for (int j=k+1;j<listForTaskTypeID.size();j++) {
-                        if(listForTaskTypeID.get(k).equals(listForTaskTypeID.get(j)))
-                            errorMessages.add(listForTaskTypeID.get(k) + " declared before ");
-                            //throw new IllegalArgumentException(listForTaskTypeID.get(k) + " declared before ");
+    private void parseTaskTypes(Scanner sc,int lineNumber,String content){
+        System.out.println("Parsing TASKTYPES at line "+lineNumber);
+        content=content.replaceAll("[()]","");
+        String parts[]=content.split("\\s+");
+        for (int i=0;i<parts.length;i++){
+            String part=parts[i];
+            if (part.matches("^[a-zA-Z][a-zA-Z0-9_]*$")){
+                if (!taskTypes.containsKey(part)){
+                    double size=1.0;
+                    if (i+1< parts.length && parts[i+1].matches("-?\\d+(\\.\\d+)?")){
+                        size=Double.parseDouble(parts[i+1]);
+                        if (size<0){
+                            errorMessages.add("line "+lineNumber+": "+part+" has a negative task size:");
+                            i++;
+                            continue;
+                        }
+                        i++;
                     }
+                    taskTypes.put(part,new TaskType(part,size));
+                    System.out.println("Added task type: "+part+" with size "+size);
+                }else {
+                    errorMessages.add("Line "+lineNumber+": TasktypeID listed twice: "+part);
                 }
-                if (!taskTypeID.matches("^[a-zA-Z][a-zA-Z0-9_]*$")) {
-                    errorMessages.add("Invalid taskTypeID " + taskTypeID + " at line " + lineNumber);
-                    //throw new IllegalArgumentException("Invalid taskTypeID " + taskTypeID + " at line " + lineNumber);
-                }
-
-                TaskType task=new TaskType(taskTypeID,defaultSize);
-                taskTypeList.add(task);
-
+            }else {
+                errorMessages.add("Line: "+lineNumber+": Invalid tasktypeID: "+part);
             }
         }
     }
     private void parseJobTypes(Scanner sc,int lineNumber){
-
-        while (sc.hasNextLine()) {
-            String line = sc.nextLine().trim();
-            String updatedLine=line.replaceAll("JOBTYPES","");
-            lineNumber++;
-            if(updatedLine.equals("))")) break;
-            String[] parts = updatedLine.replaceAll("[()]","").split("\\s+");
-            ArrayList<String> forJobTypeID=new ArrayList<>();
+        System.out.println("Parsing JOBTYPES at line "+lineNumber);
+        while (sc.hasNextLine()){
+            String line=sc.nextLine().trim();
+            System.out.println("Line "+lineNumber+": "+line);
+            if (line.startsWith("(STATIONS")){
+                parseStations(sc,lineNumber);
+                break;
+            }
+            if (line.startsWith("(")){
+                line=line.substring(1).trim();
+            }
+            if (line.endsWith("))")){
+                line=line.substring(0,line.length()-1).trim();
+            }
+            if (line.isEmpty()){
+                lineNumber++;
+                continue;
+            }
+            String parts[]=line.split("\\s+");
+            if (parts.length==0){
+                continue;
+            }
             String jobTypeID=parts[0];
-            forJobTypeID.add(parts[0]);
-            for (int i=1;i<parts.length;i+=2){
+            System.out.println("Found job type ID: "+jobTypeID);
+
+            if (jobTypes.containsKey(jobTypeID)){
+                errorMessages.add("Line "+lineNumber+": JobType "+jobTypeID+" already declared.");
+                continue;
+            }
+            List<TaskType> tasks=new ArrayList<>();
+            for (int i=1;i<parts.length;i++){
                 String taskTypeID=parts[i];
-                Double size=null;
-                if (i+1<parts.length && parts[i+1].matches("\\d+")){
+                double size=1.0;
+                if (i+1< parts.length && parts[i+1].matches("-?\\d+(\\.\\d+)?")){
                     size=Double.parseDouble(parts[i+1]);
-                    if (size<=0){
-                        errorMessages.add("Task size must be positive at line "+ lineNumber);
-                        //throw new Exception("Task size must be positive at line "+ lineNumber);
-                    }
-                    i+=2;
-                }else{
                     i++;
+                }else if (taskTypes.containsKey(taskTypeID)){
+                    size=taskTypes.get(taskTypeID).getDefaultSize();
                 }
-                if (!jobTypeID.matches("[A-Za-z][A-Za-z0-9_]*")){
-                    errorMessages.add("Invalid jobID " + jobTypeID + " at line "+ lineNumber);
-                    //throw new Exception("Invalid jobID " + jobTypeID + " at line "+ lineNumber);
-                }
-
-                TaskType task=taskTypes.get(taskTypeID);
-
-                if (task==null){
-                    errorMessages.add("Undefined taskTypeId " + taskTypeID + " referenced in job at line " + lineNumber);
-                    //throw new Exception("Undefined taskTypeId " + taskTypeID + " referenced in job at line " + lineNumber);
-                }
-                if (task.getDefaultSize()==0 && size==null){
-                    errorMessages.add("Task size for " + taskTypeID + " must be specified in job type at line " + lineNumber);
-                    //throw new Exception("Task size for " + taskTypeID + " must be specified in job type at line " + lineNumber);
-                }
-
-
-            }
-            for (int i=0;i<forJobTypeID.size();i++){
-                for (int j=i+1;j<forJobTypeID.size();j++){
-                    if (forJobTypeID.get(i).equals(forJobTypeID.get(j))){
-                        errorMessages.add(forJobTypeID.get(i)+" already declared in line: "+lineNumber);
-                    }
+                if (!taskTypes.containsKey(taskTypeID)){
+                    errorMessages.add("Line "+lineNumber+": Undefined task type "+taskTypeID+" in job type "+ jobTypeID);
+                }else{
+                    TaskType taskType=new TaskType(taskTypeID,size);
+                    tasks.add(taskType);
                 }
             }
+            jobTypes.put(jobTypeID,new JobType(jobTypeID,tasks));
+            System.out.println("Added job type: "+jobTypeID);
+            lineNumber++;
         }
     }
 
     private void parseStations(Scanner sc,int lineNumber){
+        System.out.println("Parsing STATIONS at line "+lineNumber);
 
         while (sc.hasNextLine()) {
             String line = sc.nextLine().trim();
-            String updatedLine=line.replaceAll("STATIONS","");
-            lineNumber++;
-            if(updatedLine.equals("))")) break;
-            String[] parts = updatedLine.replaceAll("[()]","").split("\\s+");
+            System.out.println("Line "+lineNumber+": "+line);
+            if (line.startsWith("(")){
+                line=line.substring(1).trim();
+            }
+
+            if (line.endsWith("))")){
+                line=line.substring(0,line.length()-1).trim();
+            }
+
+            if (line.endsWith(")")){
+                line=line.substring(0,line.length()-1).trim();
+            }
+            if (line.isEmpty()){
+                lineNumber++;
+                continue;
+            }
+
+            String parts[]=line.split("\\s+");
+            if (parts.length<4){
+                errorMessages.add("Line "+lineNumber+": Insufficient data for station definition.");
+                lineNumber++;
+                continue;
+            }
             String stationID=parts[0];
-            int maxCapacity=Integer.parseInt(parts[1]);
-            boolean isMultiFlag="Y".equals(parts[2]);
-            boolean isFifoFlag="Y".equals(parts[3]);
+            int capacity;
+            try{
+                capacity=Integer.parseInt(parts[1]);
+            }catch (NumberFormatException e){
+                errorMessages.add("Line "+lineNumber+": Invalid capacity for station "+stationID);
+                lineNumber++;
+                continue;
+            }
+            boolean multiFlag="Y".equals(parts[2]);
+            boolean fifoFlag="Y".equals(parts[3]);
+            double stationSpeed=1.0;
+            double speedVariation=0.0;
+            Station station=new Station(stationID,capacity,multiFlag,fifoFlag,stationSpeed,speedVariation);
 
-            Set<String> referencedTasks = new HashSet<>();
-            ArrayList<String> forTaskSizeInStations=new ArrayList<>();
-            String taskSizeInStation=null;
-
-            if (!stationID.matches("[A-Za-z][A-Za-z0-9_]*")){
-                errorMessages.add("Invalid stationID " + stationID + " at line "+ lineNumber);
-                //throw new Exception("Invalid stationID " + stationID + " at line "+ lineNumber);
+            if (stations.containsKey(stationID)){
+                errorMessages.add("Line "+lineNumber+": Station "+stationID+" already declared.");
+                continue;
             }
 
-            double stationSpeed=0;
-            for (int i=4;i<parts.length;i+=2){
-                if (parts[i].startsWith("[A-Za-z][A-Za-z0-9_]*")) {
-                    String taskTypeID = parts[i];
-                    referencedTasks.add(taskTypeID);
-                    taskSizeInStation=parts[i+1];
-                    forTaskSizeInStations.add(taskSizeInStation);
-                }else{
-                    stationSpeed=Double.parseDouble(parts[i]);
+            int i=4;
+            while (i<parts.length){
+                String taskTypeID=parts[i];
+                double speed=0.0;
+
+                if (i+1<parts.length && parts[i+1].matches("-?\\d+(\\.\\d+)?")){
+                    speed=Double.parseDouble(parts[i+1]);
+                    i+=2;
+                } else if (i==parts.length-1 && parts[i].matches("-?\\d+(\\.\\d+)?")) {
+                    speedVariation=Double.parseDouble(parts[i]);
+                    break;
                 }
-                Station station=new Station(stationID,maxCapacity,isMultiFlag,isFifoFlag,taskSizeInStation,stationSpeed);
-                stationList.add(station);
+                if (!taskTypes.containsKey(taskTypeID)){
+                    errorMessages.add("Line "+lineNumber+": TaskType "+taskTypeID+" not executed in any STATIONS");
+                }
+                station.addTaskType(taskTypeID,speed);
             }
+            station.setSpeedVariation(speedVariation);
 
-            checkForWhichTaskUsed(referencedTasks);
+            stations.put(stationID,station);
+            System.out.println("Added station: "+stationID);
+
+            System.out.println("Station details: ");
+            System.out.println(" Station ID: "+station.getStationID());
+            System.out.println(" Max Capacity: "+station.getMaxCapacity());
+            System.out.println(" MultiFlag: "+station.isMultiFlag());
+            System.out.println(" FifoFlag: "+station.isFifoFlag());
+            System.out.println(" Speed Variation: "+station.getSpeedVariation());
+
+
+            for (String taskType : station.getTaskSpeeds().keySet()) {
+                Double speed = station.getTaskSpeeds().get(taskType);
+                System.out.println(" Task Type: " + taskType + ", Speed: " + speed);
+            }
+            lineNumber++;
 
         }
     }
 
-    private void checkForWhichTaskUsed(Set<String> referencedTasks){
-        for (String taskTypeID:taskTypes.keySet()){
-         if (!referencedTasks.contains(taskTypeID)){
-             errorMessages.add(taskTypeID + " not executed in any stations");
-             //throw new Exception(taskTypeID + " not executed in any stations");
-         }
+    public void reportErrors(){
+        if (!errorMessages.isEmpty()) {
+            for (String error : errorMessages) {
+                System.out.println(error);
+            }
+            System.exit(1);
         }
     }
 
-    public static void displayErrors(ArrayList<String> errorMessages){
-        for(String error:errorMessages){
-            System.out.println(error);
-        }
+    public Map<String, TaskType> getTaskTypes() {
+        return taskTypes;
     }
 
+    public void setTaskTypes(Map<String, TaskType> taskTypes) {
+        this.taskTypes = taskTypes;
+    }
 
+    public Map<String, JobType> getJobTypes() {
+        return jobTypes;
+    }
+
+    public void setJobTypes(Map<String, JobType> jobTypes) {
+        this.jobTypes = jobTypes;
+    }
+
+    public Map<String, Station> getStations() {
+        return stations;
+    }
+
+    public void setStations(Map<String, Station> stations) {
+        this.stations = stations;
+    }
+
+    public List<String> getErrorMessages() {
+        return errorMessages;
+    }
+
+    public void setErrorMessages(List<String> errorMessages) {
+        this.errorMessages = errorMessages;
+    }
 }
