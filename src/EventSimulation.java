@@ -1,18 +1,23 @@
 import java.util.*;
 
 public class EventSimulation {
-    private PriorityQueue<Event> queue;
+    private List<Event> queue;
 
     public EventSimulation() {
-        this.queue = new PriorityQueue<>(Comparator.comparingInt(Event::getTime));
+        this.queue = new ArrayList<>();
     }
 
+    // Compare event times and sort them
     public void addEvent(Event event) {
         queue.add(event);
+        queue.sort((e1, e2) -> Integer.compare(e1.getTime(), e2.getTime()));
     }
 
     public Event getNextEvent() {
-        return queue.poll();
+        if (!queue.isEmpty()) {
+            return queue.remove(0);
+        }
+        return null;
     }
 
     public boolean isEmpty() {

@@ -8,6 +8,7 @@ public class Job {
     private int startTime;
     private int duration;
     private int completionTime;
+    private Map<String, Integer> taskStartTimes;
 
     public Job(String jobID, JobType jobType, int startTime, int duration) {
         this.jobID = jobID;
@@ -15,6 +16,7 @@ public class Job {
         this.startTime = startTime;
         this.duration = duration;
         this.completionTime = 0;
+        this.taskStartTimes = new HashMap<>();
     }
 
     public String getJobID() {
@@ -47,6 +49,18 @@ public class Job {
 
     public double getTaskSize(String taskTypeID) {
         return jobType.getTaskSize(taskTypeID);
+    }
+
+    public void setStartTimeforTask(String taskTypeID, int time) {
+        taskStartTimes.put(taskTypeID, time);
+    }
+    //
+    public int getStartTimeforTask(String taskTypeID) {
+        if (taskStartTimes.containsKey(taskTypeID)) {
+            return taskStartTimes.get(taskTypeID);
+        } else {
+            return -1;
+        }
     }
 
 }

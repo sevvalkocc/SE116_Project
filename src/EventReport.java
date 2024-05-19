@@ -9,45 +9,43 @@ public class EventReport {
         this.jobsByType = jobsByType;
         this.stations = stations;
     }
+    //calculate stations tardiness and report
 
-    public void calculateAverageTardiness() {
-        double totalTardiness = 0;
-        int completedJobs = 0;
-        System.out.println("Average Latency Times:");
-        for (Map.Entry<String, List<Job>> entry : jobsByType.entrySet()) {
-            String jobType = entry.getKey();
-            List<Job> jobs = entry.getValue();
-            double jobTotalTardiness = 0;
-            int jobCompletedJobs = 0;
+    public void calcAverageTardiness() {
 
-            for (Job job : jobs) {
+        System.out.println("Average Late Time:");
+
+        for (String jobType : jobsByType.keySet()) {
+            List<Job> jobs = jobsByType.get(jobType);
+
+            double allTardiness = 0.0;
+            int jobsCompleted = 0;
+
+            for (Job job:jobs) {
                 if (job.getCompletionTime() > 0) {
-                    int tardiness = job.getCompletionTime() - (job.getStartTime() + job.getDuration());
+                    int tardiness = job.getCompletionTime() - (job.getStartTime() + job.getDuration() * 60);
                     if (tardiness > 0) {
-                        jobTotalTardiness += tardiness;
-                        jobCompletedJobs++;
-                        totalTardiness += tardiness;
-                        completedJobs++;
+                        allTardiness += tardiness;
+                        jobsCompleted++;
                     }
                 }
             }
 
-            if (jobCompletedJobs > 0) {
-                double averageTardiness = jobTotalTardiness / jobCompletedJobs;
-                System.out.println("Job Type: " + jobType + ", Average Latency: " + averageTardiness + " seconds");
+            if (jobsCompleted>0) {
+                double averageTardiness = allTardiness/jobsCompleted;
+                System.out.println("Job Type: " + jobType + ", Average Late: " + averageTardiness + " seconds");
             }
         }
-
-        double overallAverageTardiness = completedJobs > 0 ? totalTardiness / completedJobs : 0;
-        System.out.println("Overall Average Tardiness: " + overallAverageTardiness + " seconds");
     }
+    //calculate station's utilization and report
 
-    public void calculateStationUtilization() {
+    public void calcStationUtilization(int simulationEnd) {
+
         System.out.println("Station Usage Rates:");
-        for (Map.Entry<String, Station> entry : stations.entrySet()) {
-            String stationId = entry.getKey();
-            Station station = entry.getValue();
-            double utilization = (double) station.getCurrentCapacity() / station.getMaxCapacity() * 100;
+
+        for (String stationId:stations.keySet()) {
+            Station station = stations.get(stationId);
+            double utilization = (double) station.getTotalProcessTime() / simulationEnd * 100;
             System.out.println("Station ID: " + stationId + ", Usage Rate: " + utilization + "%");
         }
     }
