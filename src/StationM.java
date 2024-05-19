@@ -3,12 +3,9 @@ import java.util.Map;
 
 public class StationM {
     private Map<String, Station> stations;
+
     public StationM() {
         this.stations = new HashMap<>();
-    }
-
-    public Map<String, Station> getStations() {
-        return stations;
     }
 
     public void addStation(Station station) {
@@ -17,12 +14,11 @@ public class StationM {
         }
     }
 
-    public Station getBestStationForTask(TaskType task, int currentTime) {
+    public Station getBestStationForTask(TaskType task) {
         Station bestStation = null;
         int minQueueLength = Integer.MAX_VALUE;
 
-        for (String stationID : stations.keySet()) {
-            Station station = stations.get(stationID);
+        for (Station station : stations.values()) {
             if (station.canHandleTaskType(task.getTaskTypeID())) {
                 int queueLength = station.getQueueLengthForTask(task.getTaskTypeID());
                 if (queueLength < minQueueLength) {
@@ -35,13 +31,7 @@ public class StationM {
         return bestStation;
     }
 
-    public Station getStationByTaskAndJob(String taskTypeID, String jobID) {
-        for (String stationID : stations.keySet()) {
-            Station station = stations.get(stationID);
-            if (station.containsTaskOfJob(taskTypeID, jobID)) {
-                return station;
-            }
-        }
-        return null;
+    public Map<String, Station> getStations() {
+        return stations;
     }
 }

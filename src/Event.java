@@ -1,8 +1,7 @@
 public class Event {
-    //initialize enum for Type
     public enum Type {
-        StartJob,
-        CompleteJob
+        JOB_START,
+        TASK_COMPLETE
     }
 
     private int time;
