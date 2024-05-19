@@ -25,7 +25,7 @@ public class WorkflowFileParser {
                     parseJobTypes(scanner, lineNumber);
                 } else if (line.startsWith("(STATIONS")) {
                     parseStations(scanner, lineNumber);
-                    break; // STATIONS bölümünden sonra daha fazla okumaya gerek yok
+                    break;
                 }
                 lineNumber++;
             }
@@ -38,7 +38,7 @@ public class WorkflowFileParser {
 
     private void parseTaskTypes(Scanner scanner, int lineNumber, String content) {
         System.out.println("Parsing TASKTYPES at line " + lineNumber);
-        content = content.replaceAll("[()]", ""); // Parantezleri kaldır
+        content = content.replaceAll("[()]", "");
         String[] parts = content.split("\\s+");
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i];
@@ -50,12 +50,12 @@ public class WorkflowFileParser {
                         if (size < 0) {
                             errorMessages.add("Line " + lineNumber + ": " + part + " has a negative task size.");
                             i++;
-                            continue; // Hatalı size nedeniyle bu taskType'ı atlama
+                            continue;
                         }
-                        i++; // Sonraki kısmı atla çünkü size
+                        i++;
                     }
                     taskTypes.put(part, new TaskType(part, size));
-                    System.out.println("Added task type: " + part + " with size " + size); // Hata ayıklama mesajı
+                    System.out.println("Added task type: " + part + " with size " + size);
                 } else {
                     errorMessages.add("Line " + lineNumber + ": TasktypeID listed twice: " + part);
                 }
@@ -69,24 +69,24 @@ public class WorkflowFileParser {
         System.out.println("Parsing JOBTYPES at line " + lineNumber);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
-            System.out.println("Line " + lineNumber + ": " + line); // Hata ayıklama mesajı
+            System.out.println("Line " + lineNumber + ": " + line);
 
             if (line.startsWith("(STATIONS")) {
                 parseStations(scanner, lineNumber);
-                break; // STATIONS bölümüne geçtiğimizde JOBTYPES bölümünü bitiririz
+                break;
             }
 
             if (line.startsWith("(")) {
-                line = line.substring(1).trim(); // Başlangıç parantezini kaldır
+                line = line.substring(1).trim();
             }
 
-            // Çift parantez ile biten satırları işle
+
             if (line.endsWith("))")) {
                 line = line.substring(0, line.length() - 1).trim();
             }
 
             if (line.endsWith(")")) {
-                line = line.substring(0, line.length() - 1).trim(); // Son parantezi kaldır
+                line = line.substring(0, line.length() - 1).trim();
             }
 
             if (line.isEmpty()) {
@@ -99,7 +99,7 @@ public class WorkflowFileParser {
                 continue;
 
             String jobTypeID = parts[0];
-            System.out.println("Found job type ID: " + jobTypeID); // Hata ayıklama mesajı
+            System.out.println("Found job type ID: " + jobTypeID);
 
             if (jobTypes.containsKey(jobTypeID)) {
                 errorMessages.add("Line " + lineNumber + ": JobType " + jobTypeID + " already declared.");
@@ -109,13 +109,13 @@ public class WorkflowFileParser {
             List<TaskType> tasks = new ArrayList<>();
             for (int i = 1; i < parts.length; i++) {
                 String taskTypeID = parts[i];
-                double size = 1.0; // Varsayılan büyüklük
+                double size = 1.0;
 
                 if (i + 1 < parts.length && parts[i + 1].matches("-?\\d+(\\.\\d+)?")) {
                     size = Double.parseDouble(parts[i + 1]);
                     i++;
                 } else if (taskTypes.containsKey(taskTypeID)) {
-                    size = taskTypes.get(taskTypeID).getDefaultSize(); // Default size'ı kullan
+                    size = taskTypes.get(taskTypeID).getDefaultSize();
                 }
 
                 if (!taskTypes.containsKey(taskTypeID)) {
@@ -128,7 +128,7 @@ public class WorkflowFileParser {
             jobTypes.put(jobTypeID, new JobType(jobTypeID, tasks));
             System.out.println("Added job type: " + jobTypeID); // Hata ayıklama mesajı
 
-            lineNumber++; // Satır numarasını güncelle
+            lineNumber++;
         }
     }
 
@@ -136,19 +136,18 @@ public class WorkflowFileParser {
         System.out.println("Parsing STATIONS at line " + lineNumber);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
-            System.out.println("Line " + lineNumber + ": " + line); // Hata ayıklama mesajı
+            System.out.println("Line " + lineNumber + ": " + line);
 
             if (line.startsWith("(")) {
-                line = line.substring(1).trim(); // Sadece başlangıç parantezini kaldır
+                line = line.substring(1).trim();
             }
 
-            // Çift parantez ile biten satırları işle
             if (line.endsWith("))")) {
                 line = line.substring(0, line.length() - 1).trim();
             }
 
             if (line.endsWith(")")) {
-                line = line.substring(0, line.length() - 1).trim(); // Son parantezi kaldır
+                line = line.substring(0, line.length() - 1).trim();
             }
 
             if (line.isEmpty()) {
@@ -173,8 +172,8 @@ public class WorkflowFileParser {
             }
             boolean multiFlag = "Y".equals(parts[2]);
             boolean fifoFlag = "Y".equals(parts[3]);
-            double stationSpeed = 1.0; // Varsayılan istasyon hızı
-            double speedVariation = 0.0; // Varsayılan hız varyasyonu
+            double stationSpeed = 1.0;
+            double speedVariation = 0.0;
 
             Station station = new Station(stationID, capacity, multiFlag, fifoFlag, stationSpeed, speedVariation);
 
@@ -201,13 +200,12 @@ public class WorkflowFileParser {
                 station.addTaskType(taskTypeID, speed);
             }
 
-            // İstasyonun hız varyasyonunu ayarla
+
             station.setSpeedVariation(speedVariation);
 
             stations.put(stationID, station);
-            System.out.println("Added station: " + stationID); // Hata ayıklama mesajı
+            System.out.println("Added station: " + stationID);
 
-            // Yeni eklenen kısım: İstasyon özelliklerini yazdır
             System.out.println("Station Details:");
             System.out.println("  Station ID: " + station.getStationID());
             System.out.println("  Max Capacity: " + station.getMaxCapacity());
@@ -218,7 +216,7 @@ public class WorkflowFileParser {
                 System.out.println("  Task Type: " + entry.getKey() + ", Speed: " + entry.getValue());
             }
 
-            lineNumber++; // Satır numarasını güncelle
+            lineNumber++;
         }
     }
 
@@ -227,7 +225,7 @@ public class WorkflowFileParser {
             for (String error : errorMessages) {
                 System.out.println(error);
             }
-            System.exit(1); // Hata varsa programı durdur
+            System.exit(1);
         }
     }
 
