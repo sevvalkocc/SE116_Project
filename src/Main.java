@@ -1,132 +1,113 @@
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
+        //control arguments
         if (args.length < 2) {
-            System.out.println("Please enter workflow file and job file names...");
+            System.out.println("Please enter two file names from the command line.");
             return;
         }
-        String workflowFileName;
-        String jobFileName;
 
-        if(args[0].startsWith("job.")){
-            jobFileName=args[0];
-            workflowFileName=args[1];
-        }else{
-            jobFileName=args[1];
-            workflowFileName=args[0];
-        }
+        String fileName1 = args[0];
+        String fileName2 = args[1];
 
-        checkFile(workflowFileName);
-        checkFile(jobFileName);
-
-        File workflowFile = new File(workflowFileName);
-        File jobFile = new File(jobFileName);
+        File file1 = new File(fileName1);
+        File file2 = new File(fileName2);
 
         try {
             WorkflowFileParser workflowParser = new WorkflowFileParser();
-            Map<String, Station> stations = workflowParser.parse(workflowFile);
-            Map<String, JobType> jobTypes = workflowParser.getJobTypes();
+            JobFileParser jobParser;
+
+            //chech files and parse them
+
+            Map<String, Station> stations;
+            Map<String, JobType> jobTypes;
+            Map<String, Job> jobs;
+
+            if (isWorkflowFile(file1)) {
+                stations = workflowParser.parse(file1);
+                jobTypes = workflowParser.getJobTypes();
+                jobParser = new JobFileParser(jobTypes);
+                jobs = jobParser.parse(file2);
+            } else if (isWorkflowFile(file2)) {
+                stations = workflowParser.parse(file2);
+                jobTypes = workflowParser.getJobTypes();
+                jobParser = new JobFileParser(jobTypes);
+                jobs = jobParser.parse(file1);
+            } else {
+                System.out.println("No valid workflow file found.");
+                return;
+            }
 
             if (jobTypes.isEmpty()) {
                 System.out.println("No job types found after parsing. Please check the workflow file.");
                 return;
             }
+            //adding stations to the stationM object
 
-            JobFileParser jobParser = new JobFileParser(jobTypes);
-            Map<String, Job> jobs = jobParser.parse(jobFile);
+            StationM stationM = new StationM();
+            for (String id : stations.keySet()) {
+                Station station = stations.get(id);
+                stationM.addStation(station);
+            }
+            //Adding jobs to the jobM object
 
-            Station stationManager = new Station();
-            for (Station station : stations.values()) {
-                stationManager.addStation(station);
+            JobM jobM = new JobM(stationM);
+            for (String id : jobs.keySet()) {
+                Job job = jobs.get(id);
+                jobM.addJob(job);
             }
 
+            // Process jobs
+            jobM.eventProcess();
 
-            JobType jobManager = new JobType(stationManager);
-            for (Job job : jobs.values()) {
-                jobManager.addJob(job);
+            // Calculate the simulation end time
+            int simulationEndTime = 0;
+            for (String i : jobs.keySet()) {
+                Job job = jobs.get(i);
+                if (job.getCompletionTime() > simulationEndTime) {
+                    simulationEndTime = job.getCompletionTime();
+                }
             }
 
-            while (!jobManager.isEventQueueEmpty()) {
-                jobManager.nextEventProcess();
-            }
+            System.out.println("Event Simulation completed at time: " + simulationEndTime);
 
-            Map<String, List<Job>> jobsByType=new HashMap<>();
-            for (Job job: jobs.values()){
-                String jobTypeID=job.getJobType().getJobTypeID();
-                if (!jobsByType.containsKey(jobTypeID)){
-                    jobsByType.put(jobTypeID,new ArrayList<>());
+            // Reporting
+            Map<String, List<Job>> jobsByType = new HashMap<>();
+            for (String j : jobs.keySet()) {
+                Job job = jobs.get(j);
+                String jobTypeID = job.getJobType().getJobTypeID();
+                if (!jobsByType.containsKey(jobTypeID)) {
+                    jobsByType.put(jobTypeID, new ArrayList<>());
                 }
                 jobsByType.get(jobTypeID).add(job);
             }
 
-            calculateAverageTardiness(jobsByType);
-            calculateStationUtilization(stations);
+            EventReport eventReport = new EventReport(jobsByType, stationM.getStations());
+            eventReport.calcAverageTardiness();
+            eventReport.calcStationUtilization(simulationEndTime);
 
-        } catch(Exception e){
-            System.out.println("An error occurred: "+e.getMessage());
+        } catch (FileNotFoundException e) {
+            System.out.println("File can not found: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Something went wrong: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static void calculateAverageTardiness(Map<String, List<Job>> jobsByType) {
-        double totalTardiness = 0;
-        int completedJobs = 0;
-        System.out.println("Average Latency Times:");
-        for (Map.Entry<String, List<Job>> entry : jobsByType.entrySet()) {
-            String jobType = entry.getKey();
-            List<Job> jobs = entry.getValue();
-            double jobTotalTardiness = 0;
-            int jobCompletedJobs = 0;
-
-            for (Job job : jobs) {
-                if (job.getCompletionTime() > 0) {
-                    int tardiness = job.getCompletionTime() - (job.getStartTime() + job.getDuration());
-                    if (tardiness > 0) {
-                        jobTotalTardiness += tardiness;
-                        jobCompletedJobs++;
-                        totalTardiness += tardiness;
-                        completedJobs++;
-                    }
-                }
-            }
-
-            if (jobCompletedJobs > 0) {
-                double averageTardiness = jobTotalTardiness / jobCompletedJobs;
-                System.out.println("Job Type: " + jobType + ", Average Latency: " + averageTardiness + " seconds");
+    //check if given file is workflow or not
+    private static boolean isWorkflowFile(File file) throws FileNotFoundException {
+        Scanner sc = new Scanner(file);
+        while (sc.hasNextLine()) {
+            String line = sc.nextLine().trim();
+            if (line.startsWith("(") || line.endsWith(")")) {
+                sc.close();
+                return true;
             }
         }
-
-        double overallAverageTardiness = completedJobs > 0 ? totalTardiness / completedJobs : 0;
-        System.out.println("Overall Average Tardiness: " + overallAverageTardiness + " seconds");
-    }
-
-    private static void calculateStationUtilization(Map<String, Station> stations) {
-        System.out.println("Station Usage Rates:");
-        for (Map.Entry<String, Station> entry : stations.entrySet()) {
-            String stationId = entry.getKey();
-            Station station = entry.getValue();
-            double utilization = (double) station.getCurrentCapacity() / station.getMaxCapacity() * 100;
-            System.out.println("Station ID: " + stationId + ", Usage Rate: " + utilization + "%");
-       }
-}
-
-    private static boolean checkFile(String fileName){
-        File file=new File(fileName);
-        if(!file.exists()){
-            System.out.println("Error: File "+ fileName +" does not exist");
-            return false;
-        }
-        if (!file.canRead()) {
-            System.out.println("Error: File " + fileName + " is not accessible.");
-            return false;
-        }
-        System.out.println("File " + fileName + " exists and is accessible.");
-        return true;
+        sc.close();
+        return false;
     }
 
 

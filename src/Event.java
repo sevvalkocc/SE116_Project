@@ -1,6 +1,8 @@
-public class Event implements Comparable<Event>{
+public class Event {
+    //initialize enum for Type
     public enum Type {
-        StartJob,CompleteTask
+        StartJob,
+        CompleteJob
     }
 
     private int time;
@@ -29,8 +31,5 @@ public class Event implements Comparable<Event>{
 
     public TaskType getTaskType() {
         return taskType;
-    }
-    public int compareTo(Event event1){
-        return Integer.compare(this.time, event1.time);
     }
 }

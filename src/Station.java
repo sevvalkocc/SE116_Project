@@ -6,32 +6,156 @@ public class Station {
     private int currentCapacity;
     private boolean multiFlag;
     private boolean fifoFlag;
-    private Map<String, ArrayList<Job>> taskLists;
+    private Map<String, List<Job>> taskQueues;
     private double stationSpeed;
     private double speedVariation;
+    private int totalProcessTime;
+
     private Map<String, Double> taskSpeeds;
-    private Map<String, Station> stations;
+
+    public Station(String stationID, int maxCapacity, boolean multiFlag, boolean fifoFlag) {
+        this.stationID = stationID;
+        this.maxCapacity = maxCapacity;
+        this.multiFlag = multiFlag;
+        this.fifoFlag = fifoFlag;
+        this.taskQueues = new HashMap<>();
+        this.taskSpeeds = new HashMap<>();
+        this.stationSpeed = 1.0;
+        this.speedVariation = 0.0;
+        this.totalProcessTime = 0;
+    }
 
     public Station(String stationID, int maxCapacity, boolean multiFlag, boolean fifoFlag, double stationSpeed, double speedVariation) {
         this.stationID = stationID;
         this.maxCapacity = maxCapacity;
-        this.currentCapacity = 0;
         this.multiFlag = multiFlag;
         this.fifoFlag = fifoFlag;
-        this.taskLists = new HashMap<>();
+        this.taskQueues = new HashMap<>();
         this.taskSpeeds = new HashMap<>();
         this.stationSpeed = stationSpeed;
         this.speedVariation = speedVariation;
-        this.stations = new HashMap<>();
-        // this.stations.put(stationID, this);
+        this.totalProcessTime = 0;
     }
 
-    public Station() {
-        this.stations = new HashMap<>();
+    public void addTaskType(String taskTypeID, double speed) {
+        taskQueues.put(taskTypeID, new ArrayList<>());
+        taskSpeeds.put(taskTypeID, speed);
     }
 
-    public int getCurrentCapacity() {
-        return currentCapacity;
+    public void addTask(TaskType task, Job job) {
+        if (!taskQueues.containsKey(task.getTaskTypeID())) {
+            System.out.println("Task type cannot be executed here: " + task.getTaskTypeID());
+            return;
+        }
+        taskQueues.get(task.getTaskTypeID()).add(job);
+        System.out.println("Job " + job.getJobID() + " is added to station " + stationID + " with task " + task.getTaskTypeID());
+        printTaskQueue();
+    }
+
+    public boolean canHandleTaskType(String taskTypeID) {
+        return taskQueues.containsKey(taskTypeID);
+    }
+
+    public int getQueueLengthForTask(String taskTypeID) {
+        List<Job> queue = taskQueues.get(taskTypeID);
+        if (queue != null) {
+            return queue.size();
+        } else {
+            return 0;
+        }
+    }
+
+    public double getSpeedForTask(String taskTypeID) {
+        double baseSpeed = taskSpeeds.getOrDefault(taskTypeID, stationSpeed);
+        if (speedVariation > 0) {
+            Random r = new Random();
+            double variationFactor = 1 + (r.nextDouble() * 2 - 1) * speedVariation;
+            return baseSpeed * variationFactor;
+        } else {
+            return baseSpeed;
+        }
+    }
+
+    public double getSpeedVariation() {
+        return speedVariation;
+    }
+
+    public void setSpeedVariation(double speedVariation) {
+        this.speedVariation = speedVariation;
+    }
+    //check if multiflag
+
+    public void processTasks() {
+        if (multiFlag) {
+            for (String taskTypeID : taskQueues.keySet()) {
+                processTasksForType(taskTypeID);
+            }
+        } else {
+            for (String taskTypeID : taskQueues.keySet()) {
+                processTasksForType(taskTypeID);
+                break;
+            }
+        }
+    }
+    //check if fifoflag and run it fifoprocess or eddprocess
+
+    private void processTasksForType(String taskTypeID) {
+        List<Job> queue = taskQueues.get(taskTypeID);
+        if (fifoFlag) {
+            processTasksFIFO(queue);
+        } else {
+            processTasksEDD(queue);
+        }
+    }
+    //fifo tasks process
+
+    private void processTasksFIFO(List<Job> queue) {
+        if (!queue.isEmpty() && currentCapacity < maxCapacity) {
+            Job job = queue.remove(0);
+            currentCapacity++;
+            System.out.println("Process started: Job ID: " + job.getJobID() + ", Task ID: " + job.getJobType().getJobTypeID() + " at station " + stationID);
+        }
+        printTaskQueue();
+    }
+    //fifo tasks process for early due date
+    private void processTasksEDD(List<Job> queue) {
+        queue.sort(new Comparator<Job>() {
+            @Override
+            public int compare(Job job1, Job job2) {
+                return Integer.compare(job1.getStartTime() + job1.getDuration(), job2.getStartTime() + job2.getDuration());
+            }
+        });
+
+        if (!queue.isEmpty() && currentCapacity < maxCapacity) {
+            Job job = queue.remove(0);
+            currentCapacity++;
+            System.out.println("Process started: Job ID: " + job.getJobID() + ", Task ID: " + job.getJobType().getJobTypeID() + " at station " + stationID);
+        }
+        printTaskQueue();
+    }
+
+    public void incrementProcessTime(int time) {
+        this.totalProcessTime += time;
+    }
+
+    public int getTotalProcessTime() {
+        return totalProcessTime;
+    }
+
+    public void decrementCapacity() {
+        currentCapacity--;
+    }
+
+    public boolean containsTaskOfJob(String taskTypeID, String jobID) {
+        List<Job> queue = taskQueues.get(taskTypeID);
+        if (queue != null) {
+            for (Job job : queue) {
+                if (job.getJobID().equals(jobID)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public String getStationID() {
@@ -49,173 +173,41 @@ public class Station {
     public boolean isFifoFlag() {
         return fifoFlag;
     }
+
+    public Map<String, List<Job>> getTaskQueues() {
+        return taskQueues;
+    }
+
     public Map<String, Double> getTaskSpeeds() {
         return taskSpeeds;
     }
-
-    public double getSpeedVariation() {
-        return speedVariation;
-    }
-
-    public void setSpeedVariation(double speedVariation) {
-        this.speedVariation = speedVariation;
-    }
-
-    public void addStation(Station station) {
-        if (station != null) {
-            stations.put(station.getStationID(), station);
-        }
-    }
-
-
-    /*public Station getBestStationForTask(TaskType task) {
-        Station bestStation = null;
-        int minQueueLength = Integer.MAX_VALUE;
-
-        for (Station station : stations.values()) {
-            if (station.canHandleTaskType(task.getTaskTypeID())) {
-                int queueLength = station.getQueueLengthForTask(task.getTaskTypeID());
-                if (queueLength < minQueueLength) {
-                    minQueueLength = queueLength;
-                    bestStation = station;
-                }
-            }
-        }
-
-        return bestStation;
-    }*/
-
-    public void addTaskType(String taskTypeID, double speed) {
-        taskLists.put(taskTypeID, new ArrayList<>());
-        taskSpeeds.put(taskTypeID, speed);
-    }
-
-    public void addTask(TaskType task, Job job) {
-        /*if (!taskLists.containsKey(task.getTaskTypeID())) {
-            System.out.println("Task type cannot be executed here: " + task.getTaskTypeID());
-            return;
-        }
-        taskLists.get(task.getTaskTypeID()).add(job);
-        System.out.println("Job " + job.getJobID() + " is added to station " + stationID + " with task " + task.getTaskTypeID());
-       printTaskQueue();
-       */
-        List<Job> jobs = taskLists.get(task.getTaskTypeID());
-        if (jobs == null) {
-            System.out.println("Task type cannot be executed here: " + task.getTaskTypeID());
-            return;
-        }
-        jobs.add(job);
-        System.out.println("Job " + job.getJobID() + " is added to station " + stationID + " with task " + task.getTaskTypeID());
-        printTaskQueue();
-    }
-
-
-    public boolean isValidTaskType(String taskTypeID) {
-        return taskLists.get(taskTypeID)!=null;
-    }
-
-    public int getQueueLengthForTask(String taskTypeID) {
-        ArrayList<Job> list = taskLists.get(taskTypeID);
-        if(list!=null){
-            return list.size();
-        }
-        else{
-            return 0;
-        }
-    }
-
-    public double getSpeedForTask(String taskTypeID) {
-        Double speed = taskSpeeds.get(taskTypeID);
-
-        if (speed == null) {
-            speed = stationSpeed;
-        }
-        if (speedVariation > 0) {
-            double variationFactor = 1.0 + Math.random() * speedVariation - speedVariation / 2;
-            return speed * variationFactor;
-        }
-        return speed;
-    }
-    /*public void mainProcessTasks() {
-        if (multiFlag) {
-            for (String taskTypeID : taskLists.keySet()) {
-                processTasksForType(taskTypeID);
-            }
-        } else {
-            for (String taskTypeID : taskLists.keySet()) {
-                processTasksForType(taskTypeID);
-                break;
-            }
-        }
-    }
-    public void processTasksForType(String taskTypeID) {
-        ArrayList<Job> jobList  = taskLists.get(taskTypeID);
-        if (fifoFlag) {
-            processTasksForFIFO(jobList );
-        } else {
-            processTasksForEDD(jobList );
-        }
-    }
-
-    public void processTasksForFIFO(ArrayList<Job>jobList ) {
-        if (!jobList .isEmpty() && currentCapacity < maxCapacity) {
-            Job job = jobList .remove(0);
-            currentCapacity++;
-            System.out.println("Process started: Job ID: " + job.getJobID() + ", Task ID: " + job.getJobType().getJobTypeID() + " at station " + stationID);
-        }
-        printTaskQueue();
-    }
-
-    public void processTasksForEDD(ArrayList<Job> jobList) {
-        if (!jobList.isEmpty() && currentCapacity < maxCapacity) {
-            Collections.sort(jobList, Comparator.comparingInt(Job::getStartTime));
-            Job job = jobList.remove(0);
-            currentCapacity++;
-            System.out.println("Process started: Job ID: " + job.getJobID() + ", Task ID: " + job.getJobType().getJobTypeID() + " at station " + stationID);
-        }
-        printTaskQueue();
-    }*/
-    public void processTasks() {
-        for (String taskTypeID : taskLists.keySet()) {
-            ArrayList<Job> jobList = taskLists.get(taskTypeID);
-
-            if (!jobList.isEmpty() && currentCapacity < maxCapacity) {
-                Job jobToProcess;
-
-                if (fifoFlag) {
-                    jobToProcess = jobList.remove(0);
-                } else {
-                    for (int i=0;i<jobList.size()-1;i++) {
-                        for (int j=i+1;j<jobList.size();j++) {
-                            if (jobList.get(i).getStartTime()>jobList.get(j).getStartTime()) {
-                                Job temp = jobList.get(i);
-                                jobList.set(i, jobList.get(j));
-                                jobList.set(j, temp);
-                            }
-                        }
-                    }
-                    jobToProcess = jobList.remove(0);
-                }
-                currentCapacity++;
-                System.out.println("Process started: Job ID: " + jobToProcess.getJobID() + ", Task ID: " + jobToProcess.getJobType().getJobTypeID() + " at station " + stationID);
-
-                if (!multiFlag) {
-                    break;
-                }
-            }
-        }
-        printTaskQueue();
-    }
-    public void printTaskQueue() {
+    //for task queue
+    private void printTaskQueue() {
         System.out.println("--------------------------------------");
         System.out.println("Station " + stationID + " current task queues:");
-        for (String taskTypeID : taskLists.keySet()) {
-            ArrayList<Job> jobList = taskLists.get(taskTypeID);
+
+        for (String taskTypeID : taskQueues.keySet()) {
+            List<Job> queue = taskQueues.get(taskTypeID);
+
             System.out.print("Task Type: " + taskTypeID + " Queue: ");
-            for (Job job:jobList) {
+            for (Job job : queue) {
                 System.out.print(job.getJobID() + " ");
             }
             System.out.println();
+        }
+        printCurrentTasks();
+    }
+    // for current task
+    private void printCurrentTasks() {
+        System.out.println("Station " + stationID + " currently processing tasks:");
+
+        for (String taskTypeID : taskQueues.keySet()) {
+
+            List<Job> queue = taskQueues.get(taskTypeID);
+            if (!queue.isEmpty()) {
+                Job job = queue.get(0);
+                System.out.println("Currently processing: Job ID: " + job.getJobID() + ", Task Type: " + taskTypeID);
+            }
         }
         System.out.println("--------------------------------------");
     }

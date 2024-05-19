@@ -3,25 +3,26 @@ import java.util.Collections;
 import java.util.List;
 
 public class EventSimulation {
-    private List<Event> events;
+    private List<Event> queue;
 
     public EventSimulation() {
-        this.events = new ArrayList<>();
+        this.queue = new ArrayList<>();
     }
 
+    // Compare event times and sort them
     public void addEvent(Event event) {
-        events.add(event);
-        Collections.sort(events);
+        queue.add(event);
+        queue.sort((e1, e2) -> Integer.compare(e1.getTime(), e2.getTime()));
     }
-    public Event getNextEvent(){
-        if(events.isEmpty()){
-            return null;
-        }else{
-            return  events.remove(0);
-        }
 
+    public Event getNextEvent() {
+        if (!queue.isEmpty()) {
+            return queue.remove(0);
+        }
+        return null;
     }
-    public boolean isEmpty(){
-        return events.isEmpty();
+
+    public boolean isEmpty() {
+        return queue.isEmpty();
     }
 }
